@@ -45,7 +45,7 @@ func initGame() {
 
 func placeFood() {
 	rand.Seed(time.Now().UnixNano())
-	food = Point{X: rand.Intn(width), Y: rand.Intn(height)}
+	food = Point{X: rand.Intn(width-2) + 1, Y: rand.Intn(height-2) + 1}
 }
 
 func main() {
@@ -83,11 +83,10 @@ func main() {
 	}()
 
 	for !gameOver {
-		select {
-		case <-ticker.C:
-			update()
-			draw()
-		}
+		<-ticker.C
+
+		update()
+		draw()
 	}
 }
 
@@ -95,7 +94,7 @@ func update() {
 	head := snake.Body[0]
 	newHead := Point{X: head.X + snake.Dir.X, Y: head.Y + snake.Dir.Y}
 
-	if newHead.X < 0 || newHead.X >= width || newHead.Y < 0 || newHead.Y >= height {
+	if newHead.X <= 0 || newHead.X >= width-1 || newHead.Y <= 0 || newHead.Y >= height-1 {
 		gameOver = true
 		return
 	}
@@ -118,10 +117,21 @@ func update() {
 func draw() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
-	for _, p := range snake.Body {
-		termbox.SetCell(p.X, p.Y, 'O', termbox.ColorGreen, termbox.ColorDefault)
+	// Draw borders
+	for x := 0; x < width; x++ {
+		termbox.SetCell(x, 0, '_', termbox.ColorWhite, termbox.ColorDefault)
+		termbox.SetCell(x, height-1, '_', termbox.ColorWhite, termbox.ColorDefault)
 	}
-	termbox.SetCell(food.X, food.Y, 'X', termbox.ColorRed, termbox.ColorDefault)
+	for y := 0; y < height; y++ {
+		termbox.SetCell(0, y, '|', termbox.ColorWhite, termbox.ColorDefault)
+		termbox.SetCell(width-1, y, '|', termbox.ColorWhite, termbox.ColorDefault)
+	}
+
+	// Draw snake
+	for _, p := range snake.Body {
+		termbox.SetCell(p.X, p.Y, '■', termbox.ColorGreen, termbox.ColorDefault)
+	}
+	termbox.SetCell(food.X, food.Y, '🍎', termbox.ColorRed, termbox.ColorDefault)
 
 	termbox.Flush()
 }
